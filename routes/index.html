@@ -1,91 +1,191 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>ZipUpload Test</title>
-    <style>
-      body {
-        padding-top: 50px;
-      }
-    </style>
-    <script src="/javascripts/jszip.js"></script>
-    <script src="/javascripts/ZipUpload.js"></script>
-    <script>
-      // addZipped(event.target);
-      // const zip = new JSZip();
+<script src="/javascripts/jquery-3.6.3.js"></script>
+<script src="/javascripts/jszip.js"></script>
+<script src="/javascripts/FileUpload.js"></script>
 
-      // async function addZipped(target) {
-      //   for (const file of target.files) {
-      //     zip.file(file.name, file);
-      //   }
-      //   // target.value = "";
-      // }
-      window.addEventListener("DOMContentLoaded", (event) => {
-        document
-          .querySelector("input[name='sampleFile']")
-          .addEventListener("change", (event) => {});
+<style type="text/css">
+  div.box {
+    border: 2px solid lightgray;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+  div.box h3 {
+    font-size: larger;
+    font-weight: bolder;
+  }
+  div.box div {
+    margin: 5px;
+  }
+  input[type="file"] {
+    display: none;
+  }
+</style>
 
-        document
-          .querySelector("input[name='sampleFile2']")
-          .addEventListener("change", (event) => {});
+<style type="text/css">
+  #boardUpload1,
+  #boardUpload2 {
+    display: flex;
+    column-gap: 10px;
+    align-items: baseline;
+  }
 
-        document
-          .getElementById("uploadForm")
-          .addEventListener("submit", async (event) => {
-            event.preventDefault();
+  .list {
+    display: flex;
+    column-gap: 10px;
+  }
 
-            const url = this.getAttribute("action");
-            const info = {
-              method: this.getAttribute("method"),
-              body: new FormData(this),
-            };
-            const ret = await fetch(url, info);
+  .list button {
+    margin-left: 5px;
+  }
 
-            const content = await zip.generateAsync({ type: "blob" });
-            console.log(content);
-          });
+  input.upload {
+    padding: 0 5px;
+  }
 
-        document
-          .getElementById("btnZip")
-          .addEventListener("click", async (event) => {
-            const zip = new JSZip();
-            const inputs = document.querySelectorAll("input[type='file']");
-            for (const input of inputs) {
-              for (const file of input.files) {
-                zip.file(file.name, file);
-              }
-            }
-            const content = await zip.generateAsync({ type: "blob" });
+  .list .cancel,
+  .list .delete {
+    margin: 0 5px;
+    padding: 0 5px;
+  }
+  .list a {
+    display: inline;
+  }
+</style>
 
-            const form = document.getElementById("uploadForm");
-            const data = new FormData();
-            data.append("content", content, "content.zip");
+<style type="text/css">
+  #boardUpload2List {
+    display: flex;
+    flex-direction: column;
+    column-gap: 10px;
+  }
+</style>
 
-            const url = form.getAttribute("action");
-            const info = {
-              method: form.getAttribute("method"),
-              body: data,
-            };
-            const resp = await fetch(url, info);
-            const respText = await resp.text();
+<script>
+  $(document).ready(() => {
+    const fu1 = FileUpload({
+      uploadId: "boardUpload1",
+      url: "/upload",
+      useZip: false,
+      useDrop: false,
+      maxNumberOfFiles: 2,
+      maxSize: 1000000,
+      zipFileName: "content.zip",
+    });
+    const fu2 = FileUpload({
+      uploadId: "boardUpload2",
+      listId: "boardUpload2List",
+      url: "/upload",
+      useZip: false,
+      useDrop: true,
+      maxNumberOfFiles: 2,
+      maxSize: 1000000,
+      zipFileName: "content.zip",
+      renderHeader: (uploadId) => {
+        return `
+			<input type="file" id="${uploadId}File" multiple />
+			<input type="button" id="${uploadId}Button" class="upload" value="Upload" onclick="uploadButtonClick('${uploadId}')" />`;
+      },
+      renderUpload: (file, index, files) => {
+        return `<span>${file.name}<button class="cancel" data-index="${index}">Cancel</button></span>`;
+      },
+      renderDownload: (file, index, files) => {
+        const { name, url, deleteUrl } = file;
+        const htmlA = `<a href="${url}">${name}</a>`;
+        const htmlButton = `<button class="delete" data-index="${index}" data-url="${deleteUrl}">Delete</button>`;
+        return `<span>${htmlA}${htmlButton}</span>`;
+      },
+      renderEmpty: () => {
+        return "No file";
+      },
+    });
 
-            for (const input of inputs) {
-              input.value = "";
-            }
-          });
+    $("#uploadButton1").click((e) => {
+      event.preventDefault();
+
+      fu1.startUpload($("#frm")[0], (resp) => {
+        const atchFileId = resp.files[0].atchFileId;
+        console.log(atchFileId);
       });
-    </script>
-  </head>
-  <body>
-    <form
-      id="uploadForm"
-      action="/upload"
-      method="post"
-      enctype="multipart/form-data"
-    >
-      <input type="file" name="sampleFile" multiple />
-      <input type="file" name="sampleFile2" />
-      <input type="button" id="btnZip" value="Zip!" />
-    </form>
-  </body>
-</html>
+    });
+
+    $("#frm").submit((e) => {
+      event.preventDefault();
+
+      const files = [...fu1.getFilesAdded(), ...fu2.getFilesAdded()];
+
+      const uploadZipped = $("#uploadZipped").prop("checked");
+      if (uploadZipped) {
+        const zipFileName = "content.zip";
+        getZippedAsync(files).then((blob) => {
+          const file = new File([blob], zipFileName, {
+            type: "application/zip",
+            lastModified: new Date().getTime(),
+          });
+          const data = new FormData(e.target);
+          data.append(zipFileName, file);
+
+          $.ajax({
+            type: "POST",
+            url: "/upload",
+            processData: false,
+            contentType: false,
+            dataType: "json",
+            data,
+            success: function (resp) {
+              console.log(resp);
+            },
+            err: function (err) {
+              console.log("err:", err);
+            },
+          });
+        });
+      } else {
+        const data = new FormData(e.target);
+        for (const file of files) {
+          data.append(file.name, file);
+        }
+
+        $.ajax({
+          type: "POST",
+          url: "/upload",
+          processData: false,
+          contentType: false,
+          dataType: "json",
+          data,
+          success: function (resp) {
+            console.log(resp);
+          },
+          err: function (err) {
+            console.log("err:", err);
+          },
+        });
+      }
+    });
+  });
+</script>
+
+<form id="frm" method="POST" action="/upload" enctype="multipart/form-data">
+  <input type="hidden" name="testValue" value="123" />
+
+  <div class="box">
+    <h3>Upload by button click</h3>
+    <div id="boardUpload1"></div>
+    <button id="uploadButton1">Upload File</button>
+  </div>
+
+  <div class="box">
+    <h3>Render Header, Upload list, Download list</h3>
+    <div id="boardUpload2"></div>
+    <div id="boardUpload2List" class="list"></div>
+  </div>
+
+  <div class="box">
+    <h3>Upload when submit</h3>
+    <div>
+      <label><input type="checkbox" id="uploadZipped" /> Upload zipped</label>
+    </div>
+    <div>
+      <input type="submit" value="Save" />
+    </div>
+  </div>
+</form>
