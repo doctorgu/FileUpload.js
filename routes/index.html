@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ZipUpload Test</title>
+    <style>
+      body {
+        padding-top: 50px;
+      }
+    </style>
+    <script src="/javascripts/jszip.js"></script>
+    <script src="/javascripts/ZipUpload.js"></script>
+    <script>
+      // addZipped(event.target);
+      // const zip = new JSZip();
+
+      // async function addZipped(target) {
+      //   for (const file of target.files) {
+      //     zip.file(file.name, file);
+      //   }
+      //   // target.value = "";
+      // }
+      window.addEventListener("DOMContentLoaded", (event) => {
+        document
+          .querySelector("input[name='sampleFile']")
+          .addEventListener("change", (event) => {});
+
+        document
+          .querySelector("input[name='sampleFile2']")
+          .addEventListener("change", (event) => {});
+
+        document
+          .getElementById("uploadForm")
+          .addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const url = this.getAttribute("action");
+            const info = {
+              method: this.getAttribute("method"),
+              body: new FormData(this),
+            };
+            const ret = await fetch(url, info);
+
+            const content = await zip.generateAsync({ type: "blob" });
+            console.log(content);
+          });
+
+        document
+          .getElementById("btnZip")
+          .addEventListener("click", async (event) => {
+            const zip = new JSZip();
+            const inputs = document.querySelectorAll("input[type='file']");
+            for (const input of inputs) {
+              for (const file of input.files) {
+                zip.file(file.name, file);
+              }
+            }
+            const content = await zip.generateAsync({ type: "blob" });
+
+            const form = document.getElementById("uploadForm");
+            const data = new FormData();
+            data.append("content", content, "content.zip");
+
+            const url = form.getAttribute("action");
+            const info = {
+              method: form.getAttribute("method"),
+              body: data,
+            };
+            const resp = await fetch(url, info);
+            const respText = await resp.text();
+
+            for (const input of inputs) {
+              input.value = "";
+            }
+          });
+      });
+    </script>
+  </head>
+  <body>
+    <form
+      id="uploadForm"
+      action="/upload"
+      method="post"
+      enctype="multipart/form-data"
+    >
+      <input type="file" name="sampleFile" multiple />
+      <input type="file" name="sampleFile2" />
+      <input type="button" id="btnZip" value="Zip!" />
+    </form>
+  </body>
+</html>
