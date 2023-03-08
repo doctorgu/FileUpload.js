@@ -35,3 +35,7 @@ Simple file upload using jquery (Need [jQuery](https://jquery.com/))
 ## Example
 
 - [index.html](routes/index.html)
+
+## Download
+
+- [FileUpload.js](public/javascripts/FileUpload.js)
