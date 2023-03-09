@@ -160,8 +160,16 @@ function FileUpload(options) {
     _zip = new JSZip();
   }
 
+  function showUploadDownloadList(html) {
+    const list1 = $("#" + options.listId);
+    const list2 = $("#" + options.uploadId + " .list");
+    if (list1.length) {
+      list1.html(html);
+    } else if (list2.length) {
+      list2.html(html);
+    }
+  }
   function showUpload() {
-    let html = "";
     const list = [];
     if (_filesAdded.length) {
       for (let i = 0; i < _filesAdded.length; i++) {
@@ -174,8 +182,8 @@ function FileUpload(options) {
         list.push(options.renderEmpty());
       }
     }
-    html = list.join("");
-    $("#" + options.uploadId + " .list, #" + options.listId).html(html);
+    const html = list.join("");
+    showUploadDownloadList(html);
   }
   function showDownload() {
     let html = "";
@@ -192,7 +200,7 @@ function FileUpload(options) {
       }
     }
     html = list.join("");
-    $("#" + options.uploadId + " .list, #" + options.listId).html(html);
+    showUploadDownloadList(html);
   }
 
   function sendUpload(data, callback) {
