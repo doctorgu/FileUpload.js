@@ -376,14 +376,14 @@ function FileUpload(options) {
       return _filesAdded;
     },
 
+    getZippedAsync,
+
     setFilesUploaded: (filesUploaded) => {
       _filesUploaded = filesUploaded;
       cancelFileByFiles(_filesUploaded);
     },
     showUpload,
     showDownload,
-
-    getZippedAsync,
   };
   _fileUploads.set(options.uploadId, callable);
 
