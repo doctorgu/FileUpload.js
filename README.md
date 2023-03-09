@@ -6,12 +6,16 @@ Simple file upload using jquery (Need [jQuery](https://jquery.com/))
 
 - uploadId: Element id of container for file and button
 
-- listId: Element id of container for upload and download file list
+- listIdUpload: Element id of container for upload file list
+
+- listIdDownload: Element id of container for download file list
 
 - url: Post URL of upload
 
 - useZip: Compress all selected files to zip format and upload it (Need [jszip.js](https://stuk.github.io/jszip/))
+
 - useDrop: Enable drag & drop files
+
 - maxNumberOfFiles: Maximum number of files
 
 - maxSize: Maximum size of files in byte
@@ -19,9 +23,11 @@ Simple file upload using jquery (Need [jQuery](https://jquery.com/))
 - zipFileName: File name of compressed when useZip is true
 
 - renderHeader: Renderer of file and button (Default renderer used when not specified)
+
 - renderUpload: Renderer of upload file list (Default renderer used when not specified)
 
 - renderDownload: Renderer of download file list (Default renderer used when not specified)
+
 - renderEmpty: Renderer for empty files (0 length string used when not specified)
 
 ## Functions
@@ -31,6 +37,11 @@ Simple file upload using jquery (Need [jQuery](https://jquery.com/))
 - getFilesAdded: Get all files added
 
 - getZippedAsync: Get all files zipped in one file
+
+- setFilesUploaded: Set uploaded files to appy in showUpload
+- showUpload: Show file list to upload
+
+- showDownload: Show file list uploaded
 
 ## Example
 
