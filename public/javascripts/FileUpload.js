@@ -81,7 +81,7 @@ function FileUpload(options) {
 
   function templateDownload(file, index, files) {
     const { name, url, deleteUrl } = file;
-    const htmlA = `<a href="${url}">${name}</a>`;
+    const htmlA = `<a download href="${url}">${name}</a>`;
     const htmlButton = `<button class="delete" data-index="${index}" data-url="${deleteUrl}">X</button>`;
     return `<span>` + htmlA + htmlButton + `</span>`;
   }
@@ -160,37 +160,38 @@ function FileUpload(options) {
     _zip = new JSZip();
   }
 
-  function showFiles(forDownload) {
+  function showUpload() {
     let html = "";
-    if (!forDownload) {
-      const list = [];
-      if (_filesAdded.length) {
-        for (let i = 0; i < _filesAdded.length; i++) {
-          const file = _filesAdded[i];
-          const item = getHtmlUpload(file, i, _filesAdded);
-          list.push(item);
-        }
-      } else {
-        if (options.renderEmpty) {
-          list.push(options.renderEmpty());
-        }
+    const list = [];
+    if (_filesAdded.length) {
+      for (let i = 0; i < _filesAdded.length; i++) {
+        const file = _filesAdded[i];
+        const item = getHtmlUpload(file, i, _filesAdded);
+        list.push(item);
       }
-      html = list.join("");
     } else {
-      if (_filesUploaded.length) {
-        const list = [];
-        for (let i = 0; i < _filesUploaded.length; i++) {
-          const file = _filesUploaded[i];
-          const item = getHtmlDownload(file, i, _filesUploaded);
-          list.push(item);
-        }
-        html = list.join("");
-      } else {
-        if (options.renderEmpty) {
-          list.push(options.renderEmpty());
-        }
+      if (options.renderEmpty) {
+        list.push(options.renderEmpty());
       }
     }
+    html = list.join("");
+    $("#" + options.uploadId + " .list, #" + options.listId).html(html);
+  }
+  function showDownload() {
+    let html = "";
+    if (_filesUploaded.length) {
+      const list = [];
+      for (let i = 0; i < _filesUploaded.length; i++) {
+        const file = _filesUploaded[i];
+        const item = getHtmlDownload(file, i, _filesUploaded);
+        list.push(item);
+      }
+    } else {
+      if (options.renderEmpty) {
+        list.push(options.renderEmpty());
+      }
+    }
+    html = list.join("");
     $("#" + options.uploadId + " .list, #" + options.listId).html(html);
   }
 
@@ -206,12 +207,10 @@ function FileUpload(options) {
         callback(resp);
         _filesUploaded = resp.files;
         _filesAdded = [];
-        showFiles(true);
-        console.log(resp);
+        showDownload();
       },
       err: function (err) {
         callback(err);
-        console.log("err:", err);
       },
     });
   }
@@ -224,11 +223,10 @@ function FileUpload(options) {
       dataType: "json",
       success: function (resp) {
         callback(resp);
-        showFiles(true);
+        showDownload();
       },
       err: function (err) {
         callback(err);
-        console.log("err:", err);
       },
     });
   }
@@ -271,7 +269,7 @@ function FileUpload(options) {
     const htmlList = templateList();
     $("#" + options.uploadId).html($("#" + options.uploadId).html() + htmlList);
   }
-  showFiles(false);
+  showUpload();
 
   // events
   $("#" + options.uploadId + " .list, #" + options.listId).bind(
@@ -281,14 +279,14 @@ function FileUpload(options) {
         e.preventDefault();
         const index = parseInt($(e.target).attr("data-index"), 10);
         cancelFile(index);
-        showFiles(false);
+        showUpload();
       } else if ($(e.target).hasClass("delete")) {
         e.preventDefault();
         const url = $(e.target).attr("data-url");
         const index = parseInt($(e.target).attr("data-index"), 10);
         sendDelete(url, (e) => {
           deleteFile(index);
-          showFiles(true);
+          showDownload();
         });
       }
     }
@@ -303,7 +301,7 @@ function FileUpload(options) {
 
     addFiles(e.target.files);
     e.target.value = "";
-    showFiles(false);
+    showUpload();
   });
 
   if (options.useDrop) {
@@ -330,7 +328,7 @@ function FileUpload(options) {
         }
 
         addFiles(files);
-        showFiles(false);
+        showUpload();
       }
     });
   }
@@ -341,9 +339,16 @@ function FileUpload(options) {
 
     startUpload,
 
-    getFilesAdded: function () {
+    getFilesAdded: () => {
       return _filesAdded;
     },
+
+    setFilesUploaded: (filesUploaded) => {
+      _filesUploaded = filesUploaded;
+      _filesAdded = [];
+    },
+    showDownload,
+
     getZippedAsync,
   };
   _fileUploads.set(options.uploadId, callable);

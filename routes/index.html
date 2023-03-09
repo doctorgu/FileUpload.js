@@ -90,7 +90,7 @@
       },
       renderDownload: (file, index, files) => {
         const { name, url, deleteUrl } = file;
-        const htmlA = `<a href="${url}">${name}</a>`;
+        const htmlA = `<a download href="${url}">${name}</a>`;
         const htmlButton = `<button class="delete" data-index="${index}" data-url="${deleteUrl}">Delete</button>`;
         return `<span>${htmlA}${htmlButton}</span>`;
       },
@@ -132,6 +132,8 @@
             dataType: "json",
             data,
             success: function (resp) {
+              fu2.setFilesUploaded(resp.files);
+              fu2.showDownload();
               console.log(resp);
             },
             err: function (err) {
@@ -153,6 +155,8 @@
           dataType: "json",
           data,
           success: function (resp) {
+            fu2.setFilesUploaded(resp.files);
+            fu2.showDownload();
             console.log(resp);
           },
           err: function (err) {
