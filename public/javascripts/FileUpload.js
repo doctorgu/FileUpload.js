@@ -12,6 +12,16 @@ function uploadButtonClick(uploadId) {
 }
 
 function FileUpload(options) {
+  options = {
+    listIdUpload: options.uploadId + "ListUpload",
+    listIdDownload: options.uploadId + "ListDownload",
+    useZip: false,
+    useDrop: true,
+    maxNumberOfFiles: 0,
+    maxSize: 0,
+    zipFileName: "content.zip",
+    ...options,
+  };
   let _filesAdded = [];
   let _filesUploaded = [];
 
@@ -39,8 +49,11 @@ function FileUpload(options) {
     return `${y}${m}${d}${h}${n}${s}${ms}${rnd}`;
   }
 
-  function templateList() {
-    return `<div class="list"></div>`;
+  function templateListUpload() {
+    return `<div id="${options.listIdUpload}" class="list upload"></div>`;
+  }
+  function templateListDownload() {
+    return `<div id="${options.listIdDownload}" class="list download"></div>`;
   }
 
   function templateHeader() {
@@ -151,24 +164,31 @@ function FileUpload(options) {
   function cancelFile(index) {
     _filesAdded.splice(index, 1);
   }
+  function cancelFileByFiles(files) {
+    for (const file of files) {
+      const index = _filesAdded.findIndex(
+        (f) =>
+          (f.lastModified && file.lastModified
+            ? f.lastModified == file.lastModified
+            : true) &&
+          f.size == file.size &&
+          f.name == file.name
+      );
+      if (index !== -1) {
+        cancelFile(index);
+      }
+    }
+  }
   function deleteFile(index) {
     _filesUploaded.splice(index, 1);
   }
+
   function clear() {
     _filesToAdd = [];
     _filesUploaded = [];
     _zip = new JSZip();
   }
 
-  function showUploadDownloadList(html) {
-    const list1 = $("#" + options.listId);
-    const list2 = $("#" + options.uploadId + " .list");
-    if (list1.length) {
-      list1.html(html);
-    } else if (list2.length) {
-      list2.html(html);
-    }
-  }
   function showUpload() {
     const list = [];
     if (_filesAdded.length) {
@@ -183,12 +203,12 @@ function FileUpload(options) {
       }
     }
     const html = list.join("");
-    showUploadDownloadList(html);
+    $("#" + options.listIdUpload).html(html);
   }
   function showDownload() {
     let html = "";
+    const list = [];
     if (_filesUploaded.length) {
-      const list = [];
       for (let i = 0; i < _filesUploaded.length; i++) {
         const file = _filesUploaded[i];
         const item = getHtmlDownload(file, i, _filesUploaded);
@@ -200,7 +220,7 @@ function FileUpload(options) {
       }
     }
     html = list.join("");
-    showUploadDownloadList(html);
+    $("#" + options.listIdDownload).html(html);
   }
 
   function sendUpload(data, callback) {
@@ -214,7 +234,8 @@ function FileUpload(options) {
       success: function (resp) {
         callback(resp);
         _filesUploaded = resp.files;
-        _filesAdded = [];
+        cancelFileByFiles(_filesUploaded);
+        showUpload();
         showDownload();
       },
       err: function (err) {
@@ -273,14 +294,18 @@ function FileUpload(options) {
   const htmlHeader = getHtmlHeader();
   $("#" + options.uploadId).html(htmlHeader);
 
-  if (!options.listId) {
-    const htmlList = templateList();
-    $("#" + options.uploadId).html($("#" + options.uploadId).html() + htmlList);
+  if (!$("#" + options.listIdDownload).length) {
+    const htmlListDownload = templateListDownload();
+    $("#" + options.uploadId).after(htmlListDownload);
+  }
+  if (!$("#" + options.listIdUpload).length) {
+    const htmlListUpload = templateListUpload();
+    $("#" + options.uploadId).after(htmlListUpload);
   }
   showUpload();
 
   // events
-  $("#" + options.uploadId + " .list, #" + options.listId).bind(
+  $(`#${options.listIdUpload}, #${options.listIdDownload}`).bind(
     "click",
     (e) => {
       if ($(e.target).hasClass("cancel")) {
@@ -353,8 +378,9 @@ function FileUpload(options) {
 
     setFilesUploaded: (filesUploaded) => {
       _filesUploaded = filesUploaded;
-      _filesAdded = [];
+      cancelFileByFiles(_filesUploaded);
     },
+    showUpload,
     showDownload,
 
     getZippedAsync,
