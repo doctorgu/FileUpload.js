@@ -294,14 +294,38 @@ function FileUpload(options) {
   const htmlHeader = getHtmlHeader();
   $("#" + options.uploadId).html(htmlHeader);
 
+  let htmlListDownload = "";
   if (!$("#" + options.listIdDownload).length) {
-    const htmlListDownload = templateListDownload();
+    htmlListDownload = templateListDownload();
     $("#" + options.uploadId).after(htmlListDownload);
+  } else {
+    htmlListDownload = $("#" + options.listIdDownload)[0].outerHTML;
   }
+  if (
+    !hasClass(htmlListDownload, "list") ||
+    !hasClass(htmlListDownload, "download")
+  ) {
+    throw new Error(
+      `class="list" or class="download" was not found in ${options.listIdDownload}.`
+    );
+  }
+
+  let htmlListUpload = "";
   if (!$("#" + options.listIdUpload).length) {
-    const htmlListUpload = templateListUpload();
+    htmlListUpload = templateListUpload();
     $("#" + options.uploadId).after(htmlListUpload);
+  } else {
+    htmlListUpload = $("#" + options.listIdUpload)[0].outerHTML;
   }
+  if (
+    !hasClass(htmlListUpload, "list") ||
+    !hasClass(htmlListUpload, "upload")
+  ) {
+    throw new Error(
+      `class="list" or class="upload" was not found in ${options.listIdUpload}.`
+    );
+  }
+
   showUpload();
 
   // events
