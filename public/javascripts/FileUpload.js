@@ -112,7 +112,7 @@ function FileUpload(options) {
   function validate(filesBe) {
     let sizeAll = 0;
 
-    const files = [..._filesAdded, ...filesBe];
+    const files = [..._filesAdded, ..._filesUploaded, ...filesBe];
     let msg = "";
     let idxBad = -1;
     for (let i = 0; i < files.length; i++) {
