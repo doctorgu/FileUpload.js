@@ -30,6 +30,10 @@ Simple file upload using jquery (Need [jQuery](https://jquery.com/))
 
 - renderEmpty: Renderer for empty files (0 length string used when not specified)
 
+- onInvalid: Event raised when invalid (maxNumberOfFiles or maxSize exceeded)
+
+- onValid: Event raised when valid (maxNumberOfFiles and maxSize not exceeded)
+
 ## Functions
 
 - startUpload: Start uploading files

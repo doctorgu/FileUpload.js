@@ -113,42 +113,59 @@ function FileUpload(options) {
     let sizeAll = 0;
 
     const files = [..._filesAdded, ..._filesUploaded, ...filesBe];
-    let msg = "";
-    let idxBad = -1;
+    let info = { isSize: false, index: -1, value: 0, max: 0, files, msg: "" };
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
       sizeAll += file.size;
       if (options.maxSize !== 0 && sizeAll > options.maxSize) {
-        msg =
-          "File size: " +
-          sizeAll.toLocaleString() +
-          " is larger than maximum size: " +
-          options.maxSize.toLocaleString() +
-          ".";
-        idxBad = i;
+        info = {
+          isSize: true,
+          index: i,
+          value: sizeAll,
+          max: options.maxSize,
+        };
         break;
       }
       if (options.maxNumberOfFiles !== 0 && i + 1 > options.maxNumberOfFiles) {
-        msg =
-          "File count: " +
-          (i + 1).toLocaleString() +
-          " is larger than maximum count: " +
-          options.maxNumberOfFiles.toLocaleString() +
-          ".";
-        idxBad = i;
+        info = {
+          isSize: false,
+          index: i,
+          value: i + 1,
+          max: options.maxNumberOfFiles,
+        };
         break;
       }
     }
-    if (idxBad !== -1) {
-      const filesBad = files.filter((f, i) => i >= idxBad);
-      return { valid: false, msg };
+    if (info.index !== -1) {
+      info.files = files.filter((f, i) => i >= info.index);
+      if (info.isSize) {
+        info.msg = `File size: ${info.value.toLocaleString()} is larger than maximum size: ${info.max.toLocaleString()}.`;
+      } else {
+        info.msg = `File count: ${info.value.toLocaleString()} is larger than maximum count: ${info.max.toLocaleString()}.`;
+      }
+
+      return { valid: false, info };
     }
 
-    return { valid: true, msg: "" };
+    return { valid: true, info };
   }
 
   function addFiles(files) {
+    const { valid, info } = validate(files);
+    if (!valid) {
+      if (options.onInvalid) {
+        options.onInvalid(info);
+      } else {
+        alert(info.msg);
+      }
+      return;
+    }
+
+    if (options.onValid) {
+      options.onValid();
+    }
+
     for (const file of files) {
       const found = _filesAdded.find(
         (f) =>
@@ -160,7 +177,10 @@ function FileUpload(options) {
         _filesAdded.push(file);
       }
     }
+
+    showUpload();
   }
+
   function cancelFile(index) {
     _filesAdded.splice(index, 1);
   }
@@ -350,15 +370,8 @@ function FileUpload(options) {
   );
 
   $("#" + options.uploadId + "File").bind("change", (e) => {
-    const { valid, msg } = validate(e.target.files);
-    if (!valid) {
-      alert(msg);
-      return;
-    }
-
     addFiles(e.target.files);
     e.target.value = "";
-    showUpload();
   });
 
   if (options.useDrop) {
@@ -378,14 +391,7 @@ function FileUpload(options) {
         } else {
           files = [...data.files];
         }
-        const { valid, msg } = validate(files);
-        if (!valid) {
-          alert(msg);
-          return;
-        }
-
         addFiles(files);
-        showUpload();
       }
     });
   }

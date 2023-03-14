@@ -100,19 +100,62 @@
       },
     });
 
+    const fu3 = FileUpload({
+      uploadId: "boardUpload3",
+      url: "/upload",
+      useZip: false,
+      useDrop: true,
+      maxNumberOfFiles: 2,
+      maxSize: 100000,
+      zipFileName: "content.zip",
+      onInvalid: ({ isSize, index, value, max, files }) => {
+        let msg = "";
+        if (isSize) {
+          msg = `${value.toLocaleString()} > ${max.toLocaleString()}`;
+        } else {
+          msg = `${value.toLocaleString()} > ${max.toLocaleString()}`;
+        }
+        msg += `<br/>${files
+          .map((f) => `${f.name} (${f.size.toLocaleString()})`)
+          .join("<br/>")}`;
+        $("#boardUpload3Msg").html(msg);
+      },
+      onValid: () => {
+        $("#boardUpload3Msg").html("");
+      },
+    });
+    const fu4 = FileUpload({
+      uploadId: "boardUpload4",
+      url: "/upload",
+      useZip: false,
+      useDrop: true,
+      maxNumberOfFiles: 2,
+      maxSize: 100000,
+      zipFileName: "content.zip",
+    });
+
     $("#uploadButton1").click((e) => {
       event.preventDefault();
 
-      fu1.startUpload($("#frm")[0], (resp) => {
+      fu1.startUpload($("#frm1")[0], (resp) => {
         const atchFileId = resp.files[0].atchFileId;
         console.log(atchFileId);
       });
     });
 
-    $("#frm").submit((e) => {
+    $("#uploadButton2").click((e) => {
       event.preventDefault();
 
-      const files = [...fu1.getFilesAdded(), ...fu2.getFilesAdded()];
+      fu2.startUpload($("#frm2")[0], (resp) => {
+        const atchFileId = resp.files[0].atchFileId;
+        console.log(atchFileId);
+      });
+    });
+
+    $("#frm3").submit(async (e) => {
+      event.preventDefault();
+
+      const files = [...fu3.getFilesAdded(), ...fu4.getFilesAdded()];
 
       const uploadZipped = $("#uploadZipped").prop("checked");
       if (uploadZipped) {
@@ -133,9 +176,9 @@
             dataType: "json",
             data,
             success: function (resp) {
-              fu2.setFilesUploaded(resp.files);
-              fu2.showUpload();
-              fu2.showDownload();
+              fu3.setFilesUploaded(resp.files);
+              fu3.showUpload();
+              fu3.showDownload();
               console.log(resp);
             },
             err: function (err) {
@@ -157,9 +200,9 @@
           dataType: "json",
           data,
           success: function (resp) {
-            fu2.setFilesUploaded(resp.files);
-            fu2.showUpload();
-            fu2.showDownload();
+            fu3.setFilesUploaded(resp.files);
+            fu3.showUpload();
+            fu3.showDownload();
             console.log(resp);
           },
           err: function (err) {
@@ -171,24 +214,33 @@
   });
 </script>
 
-<form id="frm" method="POST" action="/upload" enctype="multipart/form-data">
-  <input type="hidden" name="testValue" value="123" />
-
+<form id="frm1" method="POST" action="/upload" enctype="multipart/form-data">
   <div class="box">
     <h3>Upload by button click</h3>
     <div id="boardUpload1"></div>
     <button id="uploadButton1">Upload File</button>
   </div>
+</form>
 
+<form id="frm2" method="POST" action="/upload" enctype="multipart/form-data">
   <div class="box">
     <h3>Render Header, Upload list, Download list</h3>
     <div id="boardUpload2"></div>
     <div id="boardUpload2ListUpload" class="list upload"></div>
     <div id="boardUpload2ListDownload" class="list download"></div>
+    <button id="uploadButton2">Upload File</button>
   </div>
+</form>
 
+<form id="frm3" method="POST" action="/upload" enctype="multipart/form-data">
+  <input type="hidden" name="testValue" value="123" />
   <div class="box">
-    <h3>Upload when submit</h3>
+    <h3>Upload when submit, Custom alert message when invalid</h3>
+    <div id="boardUpload3"></div>
+    <div id="boardUpload3Msg"></div>
+
+    <div id="boardUpload4"></div>
+
     <div>
       <label><input type="checkbox" id="uploadZipped" /> Upload zipped</label>
     </div>
