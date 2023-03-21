@@ -361,9 +361,11 @@ function FileUpload(options) {
         e.preventDefault();
         const url = $(e.target).attr("data-url");
         const index = parseInt($(e.target).attr("data-index"), 10);
-        sendDelete(url, (e) => {
+        sendDelete(url, () => {
           deleteFile(index);
-          showDownload();
+          if (options.onDelete) {
+            options.onDelete(e, url, index);
+          }
         });
       }
     }

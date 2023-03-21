@@ -34,6 +34,8 @@ Simple file upload using jquery (Need [jQuery](https://jquery.com/))
 
 - onValid: Event raised when valid (maxNumberOfFiles and maxSize not exceeded)
 
+- onDelete: Event raised when download completed
+
 ## Functions
 
 - startUpload: Start uploading files

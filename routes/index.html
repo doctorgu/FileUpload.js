@@ -123,6 +123,9 @@
       onValid: () => {
         $("#boardUpload3Msg").html("");
       },
+      onDelete: (e, url, index) => {
+        console.log(`Deleted: ${e.target}, url: ${url}, index: ${index}`);
+      },
     });
     const fu4 = FileUpload({
       uploadId: "boardUpload4",
